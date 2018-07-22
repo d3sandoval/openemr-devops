@@ -150,15 +150,23 @@ if [ -f /etc/docker-leader ] ||
     fi
 
     if [ -f /var/www/localhost/htdocs/auto_configure.php ] &&
-       [ ! -d /var/www/localhost/htdocs/openemr/vendor ] &&
        [ "$FORCE_NO_BUILD_MODE" != "yes" ]; then
         cd /var/www/localhost/htdocs/openemr
+        # install php dependencies
         composer install
+
+        # install frontend dependencies (need unsafe-perm to run as root)
+        npm install --unsafe-perm
+
+        # build css (this can go somewhere else too)
+        npm run build
+        # clean up
         composer global require phing/phing
         /root/.composer/vendor/bin/phing vendor-clean
         /root/.composer/vendor/bin/phing assets-clean
         composer global remove phing/phing
         composer dump-autoload -o
+
         cd /var/www/localhost/htdocs
     fi
 
